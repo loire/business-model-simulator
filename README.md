@@ -1,6 +1,12 @@
 # Business Model Simulation Dashboard
 
+[![R](https://img.shields.io/badge/R-4.0+-blue.svg)](https://www.r-project.org/)
+[![Shiny](https://img.shields.io/badge/Shiny-1.7+-brightgreen.svg)](https://shiny.rstudio.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A comprehensive R Shiny application for simulating and analyzing business model scenarios over a 3-year period with Monte Carlo simulations.
+
+![Dashboard Preview](https://via.placeholder.com/800x400/4CAF50/FFFFFF?text=Business+Model+Dashboard+Preview)
 
 ## Features
 
@@ -141,6 +147,35 @@ A comprehensive R Shiny application for simulating and analyzing business model 
 - Reduce iterations for faster initial testing
 - Use reasonable parameter ranges to avoid extreme scenarios
 
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/business-model-simulator.git
+cd business-model-simulator
+
+# Install required R packages
+Rscript install_packages.R
+
+# Run the application
+Rscript app.R
+# Then open http://localhost:PORT in your browser
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
 ## License
 
-This project is open source. Feel free to modify and distribute according to your needs.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built with [R Shiny](https://shiny.rstudio.com/)
+- Interactive plots powered by [Plotly](https://plotly.com/r/)
+- Dashboard UI by [shinydashboard](https://rstudio.github.io/shinydashboard/)
