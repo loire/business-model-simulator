@@ -1,6 +1,13 @@
 # Business Model Simulation Dashboard
 # A Shiny application for simulating business model scenarios
 
+
+# Source modules
+source("defaults.R")
+source("helper.R")
+source("ui.R")
+source("server.R")
+
 # Load required libraries
 library(shiny)
 library(shinydashboard)
@@ -9,9 +16,6 @@ library(DT)
 library(dplyr)
 library(lubridate)
 
-# Source modules
-source("ui.R")
-source("server.R")
 
 # Run the application
 shinyApp(ui = ui, server = server)
