@@ -1,6 +1,6 @@
 # Test loading functionality
 library(data.table)
-source("simulation_engine.R")
+source("helpers/simulation_engine.R")
 
 # Test that we can load the latest files
 cat("Testing file loading capability...\n")

@@ -36,7 +36,7 @@ A comprehensive R Shiny application for simulating and analyzing business model 
 1. **Install R and RStudio** (if not already installed)
 2. **Install required packages**:
    ```r
-   source("install_packages.R")
+   source("utils/install_packages.R")
    ```
 
 ## Required R Packages
@@ -70,11 +70,17 @@ A comprehensive R Shiny application for simulating and analyzing business model 
 ## Application Structure
 
 ```
-├── app.R              # Main application entry point
-├── ui.R               # User interface definition
-├── server.R           # Server logic and simulation engine
-├── install_packages.R # Package installation script
-└── README.md          # This documentation
+├── app.R                    # Main application entry point
+├── ui.R                     # User interface definition
+├── server.R                 # Server logic and reactive functions
+├── helpers/
+│   ├── defaults.R           # Configuration and default values
+│   ├── helper.R             # Helper functions and utilities
+│   └── simulation_engine.R  # Core simulation engine
+├── tests/                   # Test and debug scripts
+├── utils/                   # Utility scripts (install packages, setup)
+├── docs/                    # Documentation and guides
+└── README.md                # This documentation
 ```
 
 ## Simulation Details

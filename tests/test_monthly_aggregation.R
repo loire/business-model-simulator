@@ -1,8 +1,8 @@
 # Test the monthly aggregation function
 library(data.table)
 library(lubridate)
-source("defaults.R")
-source("simulation_engine.R")
+source("helpers/defaults.R")
+source("helpers/simulation_engine.R")
 
 # Run a small test simulation
 cat("Testing monthly aggregation function...\n")

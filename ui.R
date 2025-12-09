@@ -5,18 +5,6 @@ library(shinydashboard)
 library(plotly)
 library(DT)
 
-# Install and load calheatmapR if not available
-if (!require("calheatmapR", quietly = TRUE)) {
-  if (!require("remotes", quietly = TRUE)) {
-    install.packages("remotes")
-    library(remotes)
-  }
-  remotes::install_github("durtal/calheatmapR")
-  library(calheatmapR)
-} else {
-  library(calheatmapR)
-}
-
 # Define UI
 ui <- dashboardPage(
   dashboardHeader(title = "Business Model Simulator"),
@@ -40,81 +28,12 @@ ui <- dashboardPage(
           max-width: 300px;
           text-align: left;
         }
-        .calendar-container {
-          position: relative !important;
-          overflow: hidden !important;
-        }
-        #calendar-wrapper {
-          position: absolute !important;
-          top: 15px !important;
-          left: 15px !important;
-          right: 15px !important;
-          bottom: 15px !important;
-        }
-        #seasonal_calendar {
-          position: relative !important;
-          width: 100% !important;
-          height: 100% !important;
-        }
-        #seasonal_calendar .htmlwidget {
-          position: absolute !important;
-          top: 0 !important;
-          left: 0 !important;
-          width: 100% !important;
-          height: 100% !important;
-        }
-        .cal-heatmap-container {
-          position: absolute !important;
-          top: 0 !important;
-          left: 0 !important;
-          margin: 0 !important;
-          transform: none !important;
-        }
-        .cal-heatmap-container svg {
-          position: absolute !important;
-          top: 0 !important;
-          left: 0 !important;
-        }
       ")),
       tags$script(HTML("
         $(document).ready(function(){
           $('[data-toggle=\"tooltip\"]').tooltip({
             html: true,
             container: 'body'
-          });
-
-          // Handler for clearing calendar duplicates and resetting position
-          Shiny.addCustomMessageHandler('clearCalendar', function(message) {
-            // Clear the calendar content completely
-            $('#seasonal_calendar').empty();
-
-            // Remove any lingering cal-heatmap elements
-            $('.cal-heatmap-container').remove();
-            $('#seasonal_calendar .htmlwidget').remove();
-            $('#seasonal_calendar svg').remove();
-
-            // Force reset the container positioning to absolute
-            $('#calendar-wrapper').css({
-              'position': 'absolute',
-              'top': '15px',
-              'left': '15px',
-              'right': '15px',
-              'bottom': '15px',
-              'width': 'auto',
-              'height': 'auto',
-              'transform': 'none'
-            });
-
-            // Reset the calendar output container
-            $('#seasonal_calendar').css({
-              'position': 'relative',
-              'width': '100%',
-              'height': '100%',
-              'top': '0',
-              'left': '0',
-              'transform': 'none',
-              'margin': '0'
-            });
           });
         });
       "))
@@ -479,38 +398,12 @@ ui <- dashboardPage(
             uiOutput("seasonal_periods_ui"),
             br(),
 
-            # Combined Calendar Visualization
-            h4("Combined Customer Flow Calendar"),
-            div(
-              class = "alert alert-info",
-              HTML("<strong>Calendar Legend:</strong> Each day shows the combined customer flow multiplier (Seasonal × Day-of-Week).
-                   <br><strong>Blue:</strong> Below average flow | <strong>Orange:</strong> Above average | <strong>Red:</strong> Peak periods
-                   <br>Hover over days to see exact multiplier values.")
-            ),
-            div(
-              class = "calendar-container",
-              style = "background: white; padding: 15px; border-radius: 5px; border: 1px solid #ddd;
-                       min-height: 500px; max-height: 500px; overflow: hidden;
-                       display: flex; justify-content: center; align-items: flex-start;",
-              div(
-                id = "calendar-wrapper",
-                style = "width: 100%; height: 100%; position: relative;",
-                calheatmapROutput("seasonal_calendar", height = "480px", width = "100%")
-              )
-            ),
-            br(),
-
-            # Summary statistics for the calendar
+            # Summary for seasonal patterns
             fluidRow(
               column(
-                6,
-                h5("Multiplier Range Summary"),
-                DT::dataTableOutput("calendar_summary", height = "200px")
-              ),
-              column(
-                6,
-                h5("Peak and Low Periods"),
-                verbatimTextOutput("calendar_stats")
+                12,
+                h5("Seasonal Periods Configuration"),
+                p("Configure special periods that affect customer flow throughout the year.")
               )
             ),
             br(),

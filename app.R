@@ -3,8 +3,8 @@
 
 
 # Source modules
-source("defaults.R")
-source("helper.R")
+source("helpers/defaults.R")
+source("helpers/helper.R")
 source("ui.R")
 source("server.R")
 

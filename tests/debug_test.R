@@ -1,8 +1,8 @@
 # Simple test for customer calculation
 library(data.table)
 library(lubridate)
-source("defaults.R")
-source("simulation_engine.R")
+source("helpers/defaults.R")
+source("helpers/simulation_engine.R")
 
 # Test basic parameter creation
 params <- get_default_simulation_params()

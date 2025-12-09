@@ -7,20 +7,8 @@ library(dplyr)
 library(lubridate)
 library(data.table)
 
-# Install and load calheatmapR if not available
-if (!require("calheatmapR", quietly = TRUE)) {
-  if (!require("remotes", quietly = TRUE)) {
-    install.packages("remotes")
-    library(remotes)
-  }
-  remotes::install_github("durtal/calheatmapR")
-  library(calheatmapR)
-} else {
-  library(calheatmapR)
-}
-
 # Load the modern simulation engine
-source("simulation_engine.R")
+source("helpers/simulation_engine.R")
 
 # Define server logic
 server <- function(input, output, session) {
@@ -38,6 +26,13 @@ server <- function(input, output, session) {
     expenses = DEFAULT_EXPENSES,
     seasonal_periods = DEFAULT_SEASONAL_PERIODS,
     current_currency = DEFAULT_CURRENCY
+  )
+
+  # Loading status for UI notifications
+  loading_status <- reactiveValues(
+    data_loaded = FALSE,
+    load_message = "",
+    load_time = Sys.time()
   )
 
   # Load latest simulation results if available
@@ -91,13 +86,6 @@ server <- function(input, output, session) {
     updating_max_customers = FALSE,
     updating_base_customers = FALSE,
     updating_customers_sd = FALSE
-  )
-
-  # Loading status for UI notifications
-  loading_status <- reactiveValues(
-    data_loaded = FALSE,
-    load_message = "",
-    load_time = Sys.time()
   )
 
   # Max customers synchronization
@@ -501,173 +489,6 @@ server <- function(input, output, session) {
     })
 
     do.call(tagList, period_boxes)
-  })
-
-  # Debounced calendar data reactive to prevent excessive updates
-  calendar_data_reactive <- debounce(reactive({
-    # Get unified parameters (triggers on all input changes)
-    params_data <- reactive_parameters()
-
-    # Also depend on seasonal periods changes
-    seasonal_periods <- config_data$seasonal_periods
-
-    # Get weekly multipliers from unified reactive
-    weekly_mults <- params_data$weekly_multipliers
-
-    # Create a year's worth of dates (2025 as reference year)
-    start_date <- as.Date("2025-01-01")
-    end_date <- as.Date("2025-12-31")
-    all_dates <- seq(start_date, end_date, by = "day")
-
-    # Calculate combined multipliers for each day (seasonal * weekly)
-    combined_multipliers <- sapply(all_dates, function(date) {
-      # Get seasonal multiplier (uses config_data$seasonal_periods which can change)
-      seasonal_mult <- calculate_seasonal_multiplier(date, seasonal_periods)
-
-      # Get day of week multiplier - convert Sunday=1 to Monday=1 indexing
-      day_of_week <- lubridate::wday(date) # Sunday = 1
-      weekly_mult <- weekly_mults[ifelse(day_of_week == 1, 7, day_of_week - 1)]
-
-      # Combined effect
-      return(seasonal_mult * weekly_mult)
-    })
-
-    # Create data in the format expected by calheatmapR
-    calendar_data <- as.list(combined_multipliers)
-    names(calendar_data) <- as.numeric(as.POSIXct(all_dates))
-
-    # Debug info
-    cat("Calendar reactive updated - Range:", min(combined_multipliers), "to", max(combined_multipliers), "\n")
-
-    return(list(
-      data = calendar_data,
-      multipliers = combined_multipliers,
-      dates = all_dates,
-      min_val = min(combined_multipliers),
-      max_val = max(combined_multipliers),
-      timestamp = Sys.time() # Add timestamp to ensure proper invalidation
-    ))
-  }), millis = 500) # Debounce for 500ms to prevent rapid updates
-
-  # Enhanced Calendar Visualization that reacts to input changes
-  output$seasonal_calendar <- renderCalheatmapR({
-    # Get reactive calendar data
-    cal_data <- calendar_data_reactive()
-
-    # Clear any existing calendar instances and reset positioning
-    session$sendCustomMessage(type = "clearCalendar", message = list())
-
-    # Small delay to ensure clearing is complete before rendering
-    Sys.sleep(0.1)
-
-    # Create proper diverging color scale centered on 1.0
-    min_val <- cal_data$min_val
-    max_val <- cal_data$max_val
-    mid_val <- 1.0 # Neutral point (no multiplier effect)
-
-    # Use actual data range for proper mapping
-    # Create 5 evenly spaced legend points across the actual data range
-    legend_values <- seq(min_val, max_val, length.out = 5)
-    legend_values <- round(legend_values, 2)
-
-    # Create diverging colors that map to actual data
-    # Find where 1.0 falls in the data range to center the diverging scale
-    neutral_position <- (mid_val - min_val) / (max_val - min_val)
-
-    if (neutral_position < 0.2) {
-      # Mostly above neutral - use more reds
-      diverging_colors <- c("#1e40af", "#3b82f6", "#f59e0b", "#ef4444", "#dc2626")
-    } else if (neutral_position > 0.8) {
-      # Mostly below neutral - use more blues
-      diverging_colors <- c("#1e40af", "#3b82f6", "#60a5fa", "#93c5fd", "#dbeafe")
-    } else {
-      # Balanced around neutral - true diverging
-      diverging_colors <- c("#1e40af", "#3b82f6", "#f8fafc", "#f87171", "#dc2626")
-    }
-
-    # Create the calendar heatmap with forced positioning and size constraints
-    cal_widget <- calheatmapR(
-      data = cal_data$data,
-      width = 800, # Fixed width
-      height = 400 # Fixed height
-    ) %>%
-      chDomain(
-        domain = "month",
-        subDomain = "day",
-        start = "2025-01-01",
-        range = 12,
-        cellSize = 15, # Fixed cell size
-        cellPadding = 2 # Fixed padding
-      ) %>%
-      chLabel(position = "top") %>%
-      chLegend(
-        display = TRUE,
-        orientation = "horizontal",
-        legend = legend_values,
-        colours = diverging_colors,
-        cellSize = 15, # Match domain cell size
-        margin = c(10, 10, 10, 10) # Fixed margins
-      ) # Return the widget
-    cal_widget
-  })
-
-  # Calendar summary table
-  output$calendar_summary <- DT::renderDataTable({
-    # Get calendar data from unified reactive
-    cal_data <- calendar_data_reactive()
-
-    # Create summary by month using the same dates and multipliers
-    start_date <- as.Date("2025-01-01")
-    end_date <- as.Date("2025-12-31")
-    all_dates <- cal_data$dates
-    all_multipliers <- cal_data$multipliers
-
-    # Calculate monthly summaries using existing multipliers
-    monthly_summary <- data.frame(
-      Month = month.name,
-      Min_Multiplier = numeric(12),
-      Max_Multiplier = numeric(12),
-      Avg_Multiplier = numeric(12)
-    )
-
-    for (month in 1:12) {
-      month_indices <- which(lubridate::month(all_dates) == month)
-      month_multipliers <- all_multipliers[month_indices]
-
-      monthly_summary$Min_Multiplier[month] <- round(min(month_multipliers), 2)
-      monthly_summary$Max_Multiplier[month] <- round(max(month_multipliers), 2)
-      monthly_summary$Avg_Multiplier[month] <- round(mean(month_multipliers), 2)
-    }
-
-    DT::datatable(monthly_summary,
-      options = list(pageLength = 12, dom = "t", scrollY = "160px"),
-      rownames = FALSE
-    ) %>%
-      DT::formatRound(columns = c("Min_Multiplier", "Max_Multiplier", "Avg_Multiplier"), digits = 2)
-  })
-
-  # Calendar statistics text
-  output$calendar_stats <- renderText({
-    # Get calendar data from unified reactive
-    cal_data <- calendar_data_reactive()
-
-    all_dates <- cal_data$dates
-    all_multipliers <- cal_data$multipliers
-
-    # Find peak and low days
-    peak_idx <- which.max(all_multipliers)
-    low_idx <- which.min(all_multipliers)
-
-    paste0(
-      "Peak Period:\n",
-      format(all_dates[peak_idx], "%B %d, %Y (%A)"), "\n",
-      "Multiplier: ", round(all_multipliers[peak_idx], 2), "\n\n",
-      "Lowest Period:\n",
-      format(all_dates[low_idx], "%B %d, %Y (%A)"), "\n",
-      "Multiplier: ", round(all_multipliers[low_idx], 2), "\n\n",
-      "Overall Range: ", round(min(all_multipliers), 2), " to ", round(max(all_multipliers), 2), "\n",
-      "Average: ", round(mean(all_multipliers), 2)
-    )
   })
 
   # Time range slider UI using enhanced data structure

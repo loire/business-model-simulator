@@ -1,8 +1,8 @@
 # Test simulation execution
 library(data.table)
 library(lubridate)
-source("defaults.R")
-source("simulation_engine.R")
+source("helpers/defaults.R")
+source("helpers/simulation_engine.R")
 
 # Test simulation
 params <- get_default_simulation_params()

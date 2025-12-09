@@ -10,8 +10,8 @@ library(dplyr)
 library(lubridate)
 
 # Source the modular components
-source("defaults.R")
-source("helper.R")
+source("helpers/defaults.R")
+source("helpers/helper.R")
 
 cat("=== BUSINESS MODEL SIMULATION TEST SUITE ===\n")
 cat("Testing enhanced simulation with currency support, seasonal patterns, and modular architecture\n\n")
